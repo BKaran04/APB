@@ -1,46 +1,12 @@
-`timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 05/31/2026 07:50:47 PM
-// Design Name: 
-// Module Name: apb_protocol_tb
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-
-// =============================================================
-// Testbench : apb_protocol_tb
-// Tests:
-//   1. Write to Slave1 (addr[8]=0)
-//   2. Read  from Slave1
-//   3. Write to Slave2 (addr[8]=1)
-//   4. Read  from Slave2
-// =============================================================
+`timescale 1ns/1ps
 
 module apb_protocol_tb;
 
-// -----------------------------------------------------------
-// Clock & Reset
-// -----------------------------------------------------------
-reg  PCLK    = 0;
-reg  PRESETn = 0;
+reg        PCLK    = 0;
+reg        PRESETn = 0;
 
-always #5 PCLK = ~PCLK;   // 100 MHz
+always #5 PCLK = ~PCLK;
 
-// -----------------------------------------------------------
-// DUT ports
-// -----------------------------------------------------------
 reg        transfer;
 reg        READ_WRITE;
 reg  [8:0] apb_write_paddress;
@@ -48,9 +14,6 @@ reg  [7:0] apb_write_data;
 reg  [8:0] apb_read_paddress;
 wire [7:0] apb_read_data_out;
 
-// -----------------------------------------------------------
-// DUT instantiation
-// -----------------------------------------------------------
 apb_protocol dut (
     .PCLK                (PCLK),
     .PRESETn             (PRESETn),
@@ -62,9 +25,23 @@ apb_protocol dut (
     .apb_read_data_out   (apb_read_data_out)
 );
 
-// -----------------------------------------------------------
-// Task : apply reset
-// -----------------------------------------------------------
+wire [1:0] master_state   = dut.u_master.state;
+wire       MST_PSEL       = dut.MST_PSEL;
+wire [8:0] PADDR          = dut.PADDR;
+wire       PENABLE        = dut.PENABLE;
+wire       PWRITE         = dut.PWRITE;
+wire [7:0] PWDATA         = dut.PWDATA;
+wire       SLV_PSLVERR1   = dut.u_slave1.PSLVERR;
+wire       SLV_PSLVERR2   = dut.u_slave2.PSLVERR;
+wire SLV_PSEL1  = dut.SLV_PSEL1;
+wire SLV_PSEL2  = dut.SLV_PSEL2;
+wire SLV_PREADY1 = dut.SLV_PREADY1;
+wire SLV_PREADY2 = dut.SLV_PREADY2;
+wire       MST_PREADY    = dut.MST_PREADY;
+wire [7:0] MST_PRDATA    = dut.MST_PRDATA;
+wire [7:0] SLV_PRDATA1   = dut.SLV_PRDATA1;
+wire [7:0] SLV_PRDATA2   = dut.SLV_PRDATA2;
+
 task apply_reset;
     begin
         PRESETn  = 0;
@@ -79,23 +56,14 @@ task apply_reset;
     end
 endtask
 
-// -----------------------------------------------------------
-// Task : write cycle
-// -----------------------------------------------------------
-task apb_write (
-    input [8:0] addr,
-    input [7:0] data
-);
+task apb_write (input [8:0] addr, input [7:0] data);
     begin
         @(posedge PCLK);
         apb_write_paddress = addr;
         apb_write_data     = data;
         READ_WRITE         = 1;
         transfer           = 1;
-
-        // SETUP -> ACCESS -> done (PREADY same cycle as ACCESS)
         repeat(3) @(posedge PCLK);
-
         transfer   = 0;
         READ_WRITE = 0;
         @(posedge PCLK);
@@ -103,29 +71,19 @@ task apb_write (
     end
 endtask
 
-// -----------------------------------------------------------
-// Task : read cycle
-// -----------------------------------------------------------
-task apb_read (
-    input [8:0] addr
-);
+task apb_read (input [8:0] addr);
     begin
         @(posedge PCLK);
         apb_read_paddress = addr;
         READ_WRITE        = 0;
         transfer          = 1;
-
         repeat(3) @(posedge PCLK);
-
         transfer = 0;
         @(posedge PCLK);
         $display("[%0t] READ : addr=0x%03h  data=0x%02h", $time, addr, apb_read_data_out);
     end
 endtask
 
-// -----------------------------------------------------------
-// Stimulus
-// -----------------------------------------------------------
 initial begin
     $dumpfile("apb_protocol.vcd");
     $dumpvars(0, apb_protocol_tb);
@@ -154,5 +112,3 @@ initial begin
 end
 
 endmodule
-
-

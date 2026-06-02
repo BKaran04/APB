@@ -1,24 +1,4 @@
-`timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 05/31/2026 07:47:26 PM
-// Design Name: 
-// Module Name: apb_protocol
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-
+`timescale 1ns/1ps
 module apb_protocol (
     input  wire        PCLK,
     input  wire        PRESETn,
@@ -31,18 +11,18 @@ module apb_protocol (
     output wire [7:0]  apb_read_data_out
 );
 
-wire [7:0] PADDR;
-wire        PSEL1_M, PSEL2_M;   
+wire [8:0]  PADDR;
+wire        MST_PSEL;
 wire        PENABLE;
 wire        PWRITE;
 wire [7:0]  PWDATA;
-wire        PREADY;
-wire [7:0]  PRDATA;
-wire        PSEL1_S, PSEL2_S;
-wire        PREADY1;
-wire [7:0]  PRDATA1;
-wire        PREADY2;
-wire [7:0]  PRDATA2;
+
+wire        MST_PREADY;
+wire [7:0]  MST_PRDATA;
+
+wire        SLV_PSEL1, SLV_PSEL2;
+wire        SLV_PREADY1, SLV_PREADY2;
+wire [7:0]  SLV_PRDATA1, SLV_PRDATA2;
 
 apb_master u_master (
     .PCLK                (PCLK),
@@ -54,54 +34,51 @@ apb_master u_master (
     .apb_read_paddress   (apb_read_paddress),
     .apb_read_data_out   (apb_read_data_out),
     .PADDR               (PADDR),
-    .PSEL1               (PSEL1_M),
-    .PSEL2               (PSEL2_M),
+    .MST_PSEL            (MST_PSEL),
     .PENABLE             (PENABLE),
     .PWRITE              (PWRITE),
     .PWDATA              (PWDATA),
-    .PREADY              (PREADY),
-    .PRDATA              (PRDATA)
+    .PREADY              (MST_PREADY),
+    .PRDATA              (MST_PRDATA)
 );
 
 apb4_mux u_mux (
-    .MST_PSEL1      (PSEL1_M),
-    .MST_PSEL2      (PSEL2_M),
-    .SLV_PREADY1    (PREADY1),
-    .SLV_PRDATA1    (PRDATA1),
-    .SLV_PREADY2    (PREADY2),
-    .SLV_PRDATA2    (PRDATA2),
-    .SLV_PSEL_OUT1  (PSEL1_S),
-    .SLV_PSEL_OUT2  (PSEL2_S),
-    .MST_PREADY     (PREADY),
-    .MST_PRDATA     (PRDATA)
+    .MST_PSEL     (MST_PSEL),
+    .PADDR        (PADDR),
+    .SLV_PREADY1  (SLV_PREADY1),
+    .SLV_PRDATA1  (SLV_PRDATA1),
+    .SLV_PREADY2  (SLV_PREADY2),
+    .SLV_PRDATA2  (SLV_PRDATA2),
+    .SLV_PSEL1    (SLV_PSEL1),
+    .SLV_PSEL2    (SLV_PSEL2),
+    .MST_PREADY   (MST_PREADY),
+    .MST_PRDATA   (MST_PRDATA)
 );
 
 apb_slave u_slave1 (
     .PCLK    (PCLK),
     .PRESETn (PRESETn),
-    .PSEL    (PSEL1_S),
+    .PSEL    (SLV_PSEL1),
     .PENABLE (PENABLE),
     .PWRITE  (PWRITE),
-    .PADDR   (PADDR),
+    .PADDR   (PADDR[7:0]),
     .PWDATA  (PWDATA),
-    .PRDATA  (PRDATA1),
-    .PREADY  (PREADY1),
+    .PRDATA  (SLV_PRDATA1),
+    .PREADY  (SLV_PREADY1),
     .PSLVERR ()
 );
 
 apb_slave u_slave2 (
     .PCLK    (PCLK),
     .PRESETn (PRESETn),
-    .PSEL    (PSEL2_S),
+    .PSEL    (SLV_PSEL2),
     .PENABLE (PENABLE),
     .PWRITE  (PWRITE),
-    .PADDR   (PADDR),
+    .PADDR   (PADDR[7:0]),
     .PWDATA  (PWDATA),
-    .PRDATA  (PRDATA2),
-    .PREADY  (PREADY2),
+    .PRDATA  (SLV_PRDATA2),
+    .PREADY  (SLV_PREADY2),
     .PSLVERR ()
 );
 
 endmodule
-
-

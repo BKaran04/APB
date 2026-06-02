@@ -1,24 +1,4 @@
-`timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 05/31/2026 07:42:15 PM
-// Design Name: 
-// Module Name: apb_slave
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-
+`timescale 1ns/1ps
 module apb_slave (
     input  wire        PCLK,
     input  wire        PRESETn,
@@ -54,5 +34,3 @@ end
 assign PRDATA = (PSEL && !PWRITE) ? mem[PADDR] : 8'b0;
 
 endmodule
-
-
